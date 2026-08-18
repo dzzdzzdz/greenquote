@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  fullName     String
+  passwordHash String
+  role         String   @default("USER")
+  createdAt    DateTime @default(now())
+  quotes       Quote[]
+}
+
+model Quote {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // as submitted by the applicant
+  fullName              String
+  email                 String
+  address               String
+  monthlyConsumptionKwh Int
+  systemSizeKw          Float
+  downPaymentCents      Int    @default(0)
+
+  // as computed at submission time, frozen against later pricing changes
+  systemPriceCents Int
+  principalCents   Int
+  riskBand         String
+  aprBps           Int
+  offers           Json
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}

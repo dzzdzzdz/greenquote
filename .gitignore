@@ -44,3 +44,8 @@ CLAUDE.md
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# prisma
+/src/generated/
+*.db
+*.db-journal
