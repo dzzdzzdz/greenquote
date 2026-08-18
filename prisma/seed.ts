@@ -3,7 +3,7 @@ import { prisma } from "../src/lib/db";
 import { eurosToCents } from "../src/lib/money";
 import { calculateQuote } from "../src/lib/pricing";
 
-/** Development credentials only, documented in the README. */
+/** Development credentials only. Also listed in the README. */
 const SEED_PASSWORD = "Password123!";
 
 const SEED_USERS = {

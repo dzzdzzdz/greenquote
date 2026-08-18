@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GreenQuote
 
-## Getting Started
+Solar financing pre-qualification: an authenticated user submits a system size
+and monthly consumption, and gets back a system price, a risk band, and three
+installment offers.
 
-First, run the development server:
+Built with Next.js 16 (App Router), TypeScript, Prisma 7 and SQLite.
+
+## Prerequisites
+
+- Node.js 20.9 or newer (developed on 24.5)
+- npm
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env      # DATABASE_URL and AUTH_SECRET
+npx prisma migrate dev    # create dev.db and apply migrations
+npx prisma generate       # generate the typed Prisma client
+npm run db:seed           # create the demo users and sample quotes
+npm run dev               # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Development credentials
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Created by `npm run db:seed`. Development only.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Email            | Password       | Role  |
+| ---------------- | -------------- | ----- |
+| `admin@test.com` | `Password123!` | ADMIN |
+| `user@test.com`  | `Password123!` | USER  |
 
-## Learn More
+The seed also creates three sample quotes, one per risk band. Two belong to
+`user@test.com` and one to `admin@test.com`, so the admin view has more than one
+user to filter by.
 
-To learn more about Next.js, take a look at the following resources:
+Re-running the seed is safe: users are matched on email and sample quotes on
+deterministic ids, so it refreshes them in place without touching anything you
+created by hand.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Command              | Purpose                             |
+| -------------------- | ----------------------------------- |
+| `npm run dev`        | development server                  |
+| `npm run build`      | production build                    |
+| `npm test`           | unit and integration tests (Vitest) |
+| `npm run lint`       | ESLint                              |
+| `npm run format`     | Prettier                            |
+| `npm run db:migrate` | create and apply a migration        |
+| `npm run db:seed`    | seed demo users and quotes          |
