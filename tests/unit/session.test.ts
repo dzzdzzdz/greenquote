@@ -30,12 +30,16 @@ describe("signSession / verifySession", () => {
     expect(await verifySession(token)).toEqual(user);
   });
 
-  it("rejects a tampered token", async () => {
-    const token = await signSession(user);
-    // Flip the last character of the signature.
-    const tampered = token.slice(0, -1) + (token.at(-1) === "A" ? "B" : "A");
+  it("rejects a payload edited to escalate the role", async () => {
+    const token = await signSession({ ...user, role: "USER" });
+    const [header, payload, signature] = token.split(".");
 
-    expect(await verifySession(tampered)).toBeNull();
+    const claims = JSON.parse(Buffer.from(payload, "base64url").toString());
+    claims.role = "ADMIN";
+    const forged = Buffer.from(JSON.stringify(claims)).toString("base64url");
+
+    // The signature still covers the original payload, so it no longer matches.
+    expect(await verifySession(`${header}.${forged}.${signature}`)).toBeNull();
   });
 
   it("rejects a token signed with a different secret", async () => {
