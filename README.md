@@ -50,6 +50,7 @@ created by hand.
 | `npm run dev`        | development server                  |
 | `npm run build`      | production build                    |
 | `npm test`           | unit and integration tests (Vitest) |
+| `npm run test:e2e`   | browser journey tests (Playwright)  |
 | `npm run lint`       | ESLint                              |
 | `npm run format`     | Prettier                            |
 | `npm run db:migrate` | create and apply a migration        |
@@ -171,6 +172,22 @@ quotes, and that another user's quote is indistinguishable from a missing one.
 
 The ownership tests were verified by deleting the check and confirming the suite
 fails — a test that has never failed has not been shown to protect anything.
+
+```bash
+npm run test:e2e
+```
+
+Five Playwright journeys drive a real browser against a production build, on a
+database of their own built from the same migrations and seed. They cover
+sign-in through to rendered offers, the prefilled fields, the rejection of an
+impossible down payment, and the authorisation rules from the outside: a
+customer sees no other customer in their listing, is redirected away from
+`/admin/quotes` even when navigating there directly, and gets a not-found page
+for a quote belonging to someone else.
+
+This is what the integration suite cannot show. Those tests mock `next/headers`,
+so the cookie never leaves Node; here the browser really stores it, really sends
+it back on each navigation, and really keeps it across a redirect.
 
 ## Design decisions and trade-offs
 
