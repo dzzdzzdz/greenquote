@@ -6,6 +6,9 @@ import { InvalidQuoteInputError } from "./pricing";
 /** Requested a resource that does not exist, or that the caller may not see. */
 export class NotFoundError extends Error {}
 
+/** A valid request that conflicts with existing state, e.g. a taken email. */
+export class ConflictError extends Error {}
+
 export type ErrorBody = {
   error: {
     code: string;
@@ -60,6 +63,13 @@ function toErrorResponse(error: unknown): { status: number; body: ErrorBody } {
     return {
       status: 404,
       body: { error: { code: "NOT_FOUND", message: error.message } },
+    };
+  }
+
+  if (error instanceof ConflictError) {
+    return {
+      status: 409,
+      body: { error: { code: "CONFLICT", message: error.message } },
     };
   }
 

@@ -6,7 +6,9 @@ import { z } from "zod";
  * is a convenience, server-side validation is the actual gate.
  */
 
-const email = z.email("Enter a valid email address");
+// Lowercased so "Ada@test.com" and "ada@test.com" cannot become two accounts:
+// the unique constraint is on the stored value.
+const email = z.email("Enter a valid email address").toLowerCase();
 const requiredText = (label: string) =>
   z.string().trim().min(1, `${label} is required`);
 
