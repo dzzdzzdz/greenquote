@@ -24,21 +24,21 @@ export function QuotesTable({
       <table className="w-full border-collapse text-left text-sm">
         <thead>
           <tr className="border-b border-neutral-300">
-            <th scope="col" className="py-2 pr-4 font-medium">
+            <th scope="col" className="py-2 pr-3 font-medium">
               Date
             </th>
             {showOwner ? (
-              <th scope="col" className="py-2 pr-4 font-medium">
+              <th scope="col" className="py-2 pr-3 font-medium">
                 Customer
               </th>
             ) : null}
-            <th scope="col" className="py-2 pr-4 font-medium">
+            <th scope="col" className="py-2 pr-3 font-medium">
               System size
             </th>
-            <th scope="col" className="py-2 pr-4 font-medium">
+            <th scope="col" className="py-2 pr-3 font-medium">
               Price
             </th>
-            <th scope="col" className="py-2 pr-4 font-medium">
+            <th scope="col" className="py-2 pr-3 font-medium">
               Band
             </th>
             <th scope="col" className="py-2 font-medium">
@@ -50,24 +50,28 @@ export function QuotesTable({
         <tbody>
           {quotes.map((quote) => (
             <tr key={quote.id} className="border-b border-neutral-200">
-              <td className="py-2 pr-4">
+              <td className="py-2 pr-3 whitespace-nowrap">
                 <time dateTime={quote.createdAt.toISOString()}>
                   {quote.createdAt.toLocaleDateString("en-GB")}
                 </time>
               </td>
               {showOwner ? (
-                <td className="py-2 pr-4">
+                <td className="py-2 pr-3">
                   {quote.fullName}
-                  <span className="block text-neutral-600">{quote.email}</span>
+                  <span className="hidden text-neutral-600 sm:block">
+                    {quote.email}
+                  </span>
                 </td>
               ) : null}
-              <td className="py-2 pr-4">{quote.systemSizeKw} kW</td>
-              <td className="py-2 pr-4">
+              <td className="py-2 pr-3">{quote.systemSizeKw} kW</td>
+              <td className="py-2 pr-3">
                 {formatEuros(quote.systemPriceCents)}
               </td>
-              <td className="py-2 pr-4">
+              <td className="py-2 pr-3">
                 {quote.riskBand}
-                <span className="block text-neutral-600">
+                {/* The gloss is the widest column on a phone, and the letter
+                    alone carries the meaning once you have seen it once. */}
+                <span className="hidden text-neutral-600 sm:block">
                   {describeRiskBand(quote.riskBand as RiskBand)}
                 </span>
               </td>
