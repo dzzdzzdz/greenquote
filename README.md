@@ -72,6 +72,13 @@ database imports, so the rules are testable on their own.
 
 ## API
 
+A rendered reference lives at **`/docs`**, generated from the same OpenAPI 3.1
+document served at **`/api/openapi`** — paste that into
+[editor.swagger.io](https://editor.swagger.io) to browse or generate a client.
+The document is a typed object in `src/lib/openapi.ts` rather than a separate
+YAML file, so the page and the machine-readable spec cannot describe different
+things.
+
 All endpoints return JSON. Errors share one shape:
 
 ```json
