@@ -1,3 +1,4 @@
+import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { withRoute } from "@/lib/http";
@@ -25,4 +26,46 @@ export const POST = withRoute(async (request) => {
   });
 
   return Response.json({ quote: toQuoteResponse(quote) }, { status: 201 });
+});
+
+/** Caps an unbounded admin listing. Real pagination is a follow-up. */
+const MAX_QUOTES = 100;
+
+export const GET = withRoute(async (request) => {
+  const user = await requireUser();
+  const params = new URL(request.url).searchParams;
+  const search = params.get("search")?.trim();
+  const userId = params.get("userId")?.trim();
+
+  // Own quotes unless something explicitly widens the scope, and only an
+  // administrator can widen it. Building the filter the other way round - from
+  // the query string, then checking - is how listings leak.
+  let where: Prisma.QuoteWhereInput = { userId: user.id };
+
+  if (user.role === "ADMIN") {
+    if (userId) {
+      where = { userId };
+    } else if (search) {
+      // Prisma compiles contains to LIKE. SQLite folds case for ASCII only,
+      // so "ulrich" finds "Ulrich" but "emile" never finds "Émile". Postgres
+      // folds nothing, so the same code is fully case-sensitive there and
+      // would need mode: "insensitive". See the README.
+      where = {
+        OR: [
+          { email: { contains: search } },
+          { fullName: { contains: search } },
+        ],
+      };
+    } else {
+      where = {};
+    }
+  }
+
+  const quotes = await prisma.quote.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    take: MAX_QUOTES,
+  });
+
+  return Response.json({ quotes: quotes.map(toQuoteResponse) });
 });
