@@ -1,12 +1,21 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requirePageUser } from "@/lib/auth/guard";
 import { formatEuros } from "@/lib/money";
-import type { Offer, RiskBand } from "@/lib/pricing";
+import {
+  buildAmortizationSchedule,
+  type Offer,
+  type RiskBand,
+} from "@/lib/pricing";
 import { describeRiskBand, findVisibleQuote, formatApr } from "@/lib/quotes";
 
-export default async function QuotePage({ params }: PageProps<"/quotes/[id]">) {
+export default async function QuotePage({
+  params,
+  searchParams,
+}: PageProps<"/quotes/[id]">) {
   const user = await requirePageUser();
   const { id } = await params;
+  const { term } = await searchParams;
 
   // The same rule the API applies. Two routes to the same row, one definition
   // of who may read it.
@@ -15,6 +24,19 @@ export default async function QuotePage({ params }: PageProps<"/quotes/[id]">) {
 
   const offers = quote.offers as Offer[];
   const riskBand = quote.riskBand as RiskBand;
+
+  // Which schedule to show, if any. Only a term we actually offered.
+  const selected = offers.find((offer) => String(offer.termYears) === term);
+
+  // Rebuilt from the stored principal and rate rather than stored itself: the
+  // schedule is fully determined by figures that were frozen at submission.
+  const schedule = selected
+    ? buildAmortizationSchedule(
+        selected.principalCents,
+        selected.aprBps,
+        selected.termYears,
+      )
+    : [];
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 p-6">
@@ -83,10 +105,71 @@ export default async function QuotePage({ params }: PageProps<"/quotes/[id]">) {
                 {formatEuros(offer.monthlyPaymentCents * offer.termYears * 12)}{" "}
                 total
               </p>
+              <Link
+                href={`?term=${offer.termYears}`}
+                scroll={false}
+                className="mt-2 inline-block text-sm underline"
+                aria-current={
+                  selected?.termYears === offer.termYears ? "true" : undefined
+                }
+              >
+                {selected?.termYears === offer.termYears
+                  ? "Showing schedule"
+                  : "View schedule"}
+              </Link>
             </li>
           ))}
         </ul>
       )}
+
+      {selected ? (
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold">
+            Repayment schedule · {selected.termYears} years
+          </h2>
+          <p className="mt-1 text-sm text-neutral-600">
+            {schedule.length} monthly payments. The final instalment differs
+            slightly because each month is rounded to whole cents.
+          </p>
+
+          <div className="mt-4 max-h-96 overflow-auto rounded-lg border border-neutral-300">
+            <table className="w-full border-collapse text-right text-sm">
+              <thead className="sticky top-0 bg-white">
+                <tr className="border-b border-neutral-300">
+                  <th scope="col" className="p-2 text-left font-medium">
+                    Month
+                  </th>
+                  <th scope="col" className="p-2 font-medium">
+                    Payment
+                  </th>
+                  <th scope="col" className="p-2 font-medium">
+                    Interest
+                  </th>
+                  <th scope="col" className="p-2 font-medium">
+                    Principal
+                  </th>
+                  <th scope="col" className="p-2 font-medium">
+                    Balance
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {schedule.map((row) => (
+                  <tr key={row.month} className="border-b border-neutral-100">
+                    <th scope="row" className="p-2 text-left font-normal">
+                      {row.month}
+                    </th>
+                    <td className="p-2">{formatEuros(row.paymentCents)}</td>
+                    <td className="p-2">{formatEuros(row.interestCents)}</td>
+                    <td className="p-2">{formatEuros(row.principalCents)}</td>
+                    <td className="p-2">{formatEuros(row.balanceCents)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }

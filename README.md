@@ -233,6 +233,22 @@ This is the one place the "just swap the datasource" story is not quite true.
 **No Docker.** The spec permits documented scripts, and a half-working container
 is worse than none. See below for what deploying this would actually look like.
 
+## Amortisation schedule
+
+Each offer on the results page links to its own month-by-month schedule
+(`/quotes/<id>?term=10`): payment, interest, principal and remaining balance
+for every instalment.
+
+Every figure is rounded to whole cents as it is computed, so after 180 months
+the balance would sit a euro or so away from zero. The final instalment absorbs
+that drift — its principal is whatever remains — which is what a real lender
+does. Two unit tests pin it: the closing balance is exactly zero, and the
+principal column sums to exactly the amount borrowed.
+
+The schedule is rebuilt on demand from the stored principal and rate rather than
+persisted. Both were frozen when the quote was issued, so the result is
+deterministic and there is nothing extra to keep consistent.
+
 ## What I would do next
 
 1. **Pagination** on both listings, replacing the 100-row cap.

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   aprBpsForBand,
+  buildAmortizationSchedule,
   calculateMonthlyPaymentCents,
   calculateQuote,
   calculateSystemPriceCents,
@@ -124,5 +125,62 @@ describe("calculateQuote", () => {
         downPaymentCents: 600_001,
       }),
     ).toThrow(InvalidQuoteInputError);
+  });
+});
+
+describe("buildAmortizationSchedule", () => {
+  const principalCents = 600_000;
+  const aprBps = 690;
+  const termYears = 5;
+  const schedule = buildAmortizationSchedule(principalCents, aprBps, termYears);
+
+  it("has one row per month", () => {
+    expect(schedule).toHaveLength(60);
+  });
+
+  it("pays the loan off to exactly zero", () => {
+    expect(schedule.at(-1)?.balanceCents).toBe(0);
+  });
+
+  it("repays exactly the principal, no more and no less", () => {
+    const repaid = schedule.reduce((sum, row) => sum + row.principalCents, 0);
+
+    expect(repaid).toBe(principalCents);
+  });
+
+  it("splits every payment into interest and principal", () => {
+    for (const row of schedule) {
+      expect(row.interestCents + row.principalCents).toBe(row.paymentCents);
+    }
+  });
+
+  it("shifts from interest towards principal over time", () => {
+    const first = schedule[0];
+    const last = schedule.at(-1)!;
+
+    expect(first.interestCents).toBeGreaterThan(last.interestCents);
+    expect(first.principalCents).toBeLessThan(last.principalCents);
+  });
+
+  it("charges interest on the outstanding balance only", () => {
+    // 6.9% a year on 6000 EUR is 34.50 EUR in the first month.
+    expect(schedule[0].interestCents).toBe(3_450);
+  });
+
+  it("absorbs rounding drift in the final instalment", () => {
+    const regular = calculateMonthlyPaymentCents(
+      principalCents,
+      aprBps,
+      termYears,
+    );
+    const final = schedule.at(-1)!;
+
+    // Within a euro of every other payment, but not necessarily equal.
+    expect(Math.abs(final.paymentCents - regular)).toBeLessThan(100);
+  });
+
+  it("is empty when there is nothing to amortise", () => {
+    expect(buildAmortizationSchedule(0, 690, 5)).toEqual([]);
+    expect(buildAmortizationSchedule(600_000, 690, 0)).toEqual([]);
   });
 });

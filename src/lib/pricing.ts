@@ -12,6 +12,14 @@ export type Offer = {
   monthlyPaymentCents: number;
 };
 
+export type AmortizationRow = {
+  month: number;
+  paymentCents: number;
+  interestCents: number;
+  principalCents: number;
+  balanceCents: number;
+};
+
 export type QuoteCalculation = {
   systemPriceCents: number;
   principalCents: number;
@@ -107,4 +115,50 @@ export function calculateQuote(input: {
   }));
 
   return { systemPriceCents, principalCents, riskBand, aprBps, offers };
+}
+
+/**
+ * Month by month breakdown of a single offer.
+ *
+ * Every figure is rounded to whole cents as it is computed, so after n months
+ * the remaining balance is a few cents away from zero. The final row absorbs
+ * that drift: its principal is whatever is left, and its payment is that
+ * principal plus its interest. A borrower's last instalment differs slightly
+ * from the rest, which is what real lenders do.
+ */
+export function buildAmortizationSchedule(
+  principalCents: number,
+  aprBps: number,
+  termYears: number,
+): AmortizationRow[] {
+  const months = termYears * MONTHS_PER_YEAR;
+  if (principalCents === 0 || months === 0) return [];
+
+  const monthlyRate = aprBps / BPS_PER_UNIT / MONTHS_PER_YEAR;
+  const payment = calculateMonthlyPaymentCents(
+    principalCents,
+    aprBps,
+    termYears,
+  );
+
+  const schedule: AmortizationRow[] = [];
+  let balance = principalCents;
+
+  for (let month = 1; month <= months; month += 1) {
+    const interest = Math.round(balance * monthlyRate);
+    const isFinal = month === months;
+    const principal = isFinal ? balance : payment - interest;
+
+    balance -= principal;
+
+    schedule.push({
+      month,
+      paymentCents: principal + interest,
+      interestCents: interest,
+      principalCents: principal,
+      balanceCents: balance,
+    });
+  }
+
+  return schedule;
 }
