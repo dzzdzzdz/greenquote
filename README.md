@@ -14,10 +14,9 @@ Built with Next.js 16 (App Router), TypeScript, Prisma 7 and SQLite.
 ## Setup
 
 ```bash
-npm install
+npm install               # also generates the Prisma client
 cp .env.example .env      # DATABASE_URL and AUTH_SECRET
-npx prisma migrate dev    # create dev.db and apply migrations
-npx prisma generate       # generate the typed Prisma client
+npm run db:migrate        # create dev.db and apply migrations
 npm run db:seed           # create the demo users and sample quotes
 npm run dev               # http://localhost:3000
 ```
