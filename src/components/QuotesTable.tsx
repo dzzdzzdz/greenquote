@@ -25,7 +25,7 @@ export function QuotesTable({
         <thead>
           <tr className="border-b border-neutral-300">
             <th scope="col" className="py-2 pr-3 font-medium">
-              Date
+              Quote
             </th>
             {showOwner ? (
               <th scope="col" className="py-2 pr-3 font-medium">
@@ -50,10 +50,19 @@ export function QuotesTable({
         <tbody>
           {quotes.map((quote) => (
             <tr key={quote.id} className="border-b border-neutral-200">
-              <td className="py-2 pr-3 whitespace-nowrap">
-                <time dateTime={quote.createdAt.toISOString()}>
+              <td className="py-2 pr-3">
+                <time
+                  dateTime={quote.createdAt.toISOString()}
+                  className="whitespace-nowrap"
+                >
                   {quote.createdAt.toLocaleDateString("en-GB")}
                 </time>
+                {/* Several quotes filed on one day are otherwise identical at a
+                    glance. The address is what a customer recognises: which
+                    roof this was for. */}
+                <span className="block max-w-[18ch] truncate text-neutral-600 sm:max-w-[28ch]">
+                  {quote.address}
+                </span>
               </td>
               {showOwner ? (
                 <td className="py-2 pr-3">
@@ -79,10 +88,7 @@ export function QuotesTable({
                 <Link href={`/quotes/${quote.id}`} className="underline">
                   View
                   {/* Names the row for a screen reader jumping link to link. */}
-                  <span className="sr-only">
-                    {" "}
-                    quote from {quote.createdAt.toLocaleDateString("en-GB")}
-                  </span>
+                  <span className="sr-only"> quote for {quote.address}</span>
                 </Link>
               </td>
             </tr>

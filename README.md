@@ -262,6 +262,14 @@ browser for inline errors and on the server as the actual gate.
 same code is fully case-sensitive there and would need `mode: "insensitive"`.
 This is the one place the "just swap the datasource" story is not quite true.
 
+**Quotes are identified by address in the listing.** Three quotes filed on one
+afternoon show the same date, size, price and band, so the rows are
+indistinguishable without it — and the address is what a customer actually
+recognises: which roof this was for. On a phone the personal table scrolls
+sideways to fit it, which is the accepted pattern for a data table; truncating
+the address far enough to avoid that would render two streets in the same city
+identically and defeat the point.
+
 **Listings are capped at 100 rows** rather than paginated. Honest placeholder.
 
 **No Docker.** The spec permits documented scripts, and a half-working container
@@ -314,6 +322,14 @@ already complete, I took the cheap version knowingly. See below.
 5. **Server-rendered PDF** at `GET /api/quotes/:id/pdf`, replacing the print
    stylesheet: deterministic output, our own filename, no browser furniture, and
    the same ownership check as every other read.
+6. **User-named quotes.** The address distinguishes rows today, but people would
+   rather write "Mum's roof". The shape: a nullable `label` on `Quote`, falling
+   back to the address at render time rather than storing a derived default that
+   could go stale — and a `PATCH /api/quotes/:id`, which would be the first
+   mutation of an existing row and needs its own ownership rule, including
+   whether an administrator may rename someone else's quote. A name you can only
+   set at creation is half the feature, which is why this is a unit of work
+   rather than a form field.
 
 ## Deployment and CI/CD
 
