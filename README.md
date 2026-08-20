@@ -165,7 +165,7 @@ HS256 with `AUTH_SECRET` and valid for 24 hours. The token carries `id`, `email`
 npm test
 ```
 
-40 tests. Unit tests cover the pricing maths (band boundaries at exactly 400
+50 tests. Unit tests cover the pricing maths (band boundaries at exactly 400
 kWh / 6 kW / 250 kWh, a zero principal, a textbook amortisation figure checked
 against a published mortgage table) and session signing (tampering, wrong
 secret, expiry, an unknown role).
@@ -300,13 +300,10 @@ already complete, I took the cheap version knowingly. See below.
 
 1. **Pagination** on both listings, replacing the 100-row cap.
 2. **Postgres** via docker-compose, which also removes the search caveat.
-3. **Playwright** covering sign-in → quote → results in a real browser, so the
-   mocked cookie store is not the only evidence the flow works.
-4. **OpenAPI** document with a rendered docs page.
-5. **Rate limiting** on login and registration. Nothing currently slows down an
+3. **Rate limiting** on login and registration. Nothing currently slows down an
    attacker working through a password list.
-6. **Sliding sessions or refresh tokens**, so the TTL is not a hard logout.
-7. **Server-rendered PDF** at `GET /api/quotes/:id/pdf`, replacing the print
+4. **Sliding sessions or refresh tokens**, so the TTL is not a hard logout.
+5. **Server-rendered PDF** at `GET /api/quotes/:id/pdf`, replacing the print
    stylesheet: deterministic output, our own filename, no browser furniture, and
    the same ownership check as every other read.
 
