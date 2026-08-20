@@ -94,6 +94,7 @@ All endpoints return JSON. Errors share one shape:
 | Method | Path                 | Auth | Notes                                                        |
 | ------ | -------------------- | ---- | ------------------------------------------------------------ |
 | GET    | `/api/health`        | —    | liveness only                                                |
+| GET    | `/api/openapi`       | —    | this API's OpenAPI 3.1 document                              |
 | POST   | `/api/auth/register` | —    | 201, signs the user in; 409 if the email is taken            |
 | POST   | `/api/auth/login`    | —    | 200; 401 `Invalid email or password`                         |
 | POST   | `/api/auth/logout`   | —    | 204, always                                                  |
