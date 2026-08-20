@@ -1,5 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client";
-import { requireUser } from "@/lib/auth/guard";
+import { requireAdmin, requireUser } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { withRoute } from "@/lib/http";
 import { calculateQuote } from "@/lib/pricing";
@@ -36,6 +36,12 @@ export const GET = withRoute(async (request) => {
   const params = new URL(request.url).searchParams;
   const search = params.get("search")?.trim();
   const userId = params.get("userId")?.trim();
+
+  // Refuse rather than quietly ignore: accepting a filter and then dropping it
+  // would report someone else's quotes as an empty result you are allowed to
+  // see, which is a worse answer than saying no. Going through the guard rather
+  // than comparing the role here keeps every authorisation decision in one file.
+  if (search || userId) await requireAdmin();
 
   // Own quotes unless something explicitly widens the scope, and only an
   // administrator can widen it. Building the filter the other way round - from

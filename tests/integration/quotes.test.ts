@@ -144,6 +144,20 @@ describe("GET /api/quotes", () => {
     expect(quotes).toHaveLength(1);
   });
 
+  it("refuses a filter from a customer rather than silently ignoring it", async () => {
+    const other = await signUp("first@test.com");
+    await signUp("second@test.com");
+
+    const bySearch = await list("?search=first");
+    const byOwner = await list(`?userId=${other.id}`);
+
+    expect(bySearch.status).toBe(403);
+    expect(byOwner.status).toBe(403);
+    await expect(bySearch.json()).resolves.toMatchObject({
+      error: { code: "FORBIDDEN" },
+    });
+  });
+
   it("returns every quote to an administrator, and filters by owner", async () => {
     const first = await signUp("first@test.com");
     await createQuote(post("/api/quotes", quoteInput), {});

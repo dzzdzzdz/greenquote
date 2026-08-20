@@ -154,7 +154,7 @@ export const openApiDocument = {
         tags: ["Quotes"],
         summary: "List quotes",
         description:
-          "Your own quotes. Administrators may widen the scope with search or userId. Capped at 100 results.",
+          "Your own quotes. The search and userId filters are administrator-only; a customer who passes either gets 403 rather than having it ignored. Capped at 100 results.",
         parameters: [
           {
             name: "search",
@@ -173,6 +173,7 @@ export const openApiDocument = {
           },
         ],
         responses: {
+          "403": { $ref: "#/components/responses/Forbidden" },
           "200": {
             description: "The matching quotes, newest first",
             content: {
@@ -377,6 +378,14 @@ export const openApiDocument = {
       },
       NotFound: {
         description: "No such quote, or not yours",
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/Error" },
+          },
+        },
+      },
+      Forbidden: {
+        description: "Signed in, but not permitted to do this",
         content: {
           "application/json": {
             schema: { $ref: "#/components/schemas/Error" },

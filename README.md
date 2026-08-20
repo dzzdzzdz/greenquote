@@ -91,16 +91,16 @@ All endpoints return JSON. Errors share one shape:
 }
 ```
 
-| Method | Path                 | Auth | Notes                                                |
-| ------ | -------------------- | ---- | ---------------------------------------------------- |
-| GET    | `/api/health`        | —    | liveness only                                        |
-| POST   | `/api/auth/register` | —    | 201, signs the user in; 409 if the email is taken    |
-| POST   | `/api/auth/login`    | —    | 200; 401 `Invalid email or password`                 |
-| POST   | `/api/auth/logout`   | —    | 204, always                                          |
-| GET    | `/api/auth/me`       | user | the session user                                     |
-| POST   | `/api/quotes`        | user | 201 with `inputs`, `derived`, `offers`               |
-| GET    | `/api/quotes`        | user | own quotes; admins may pass `?search=` or `?userId=` |
-| GET    | `/api/quotes/:id`    | user | own quote, or any quote for an admin; else 404       |
+| Method | Path                 | Auth | Notes                                                        |
+| ------ | -------------------- | ---- | ------------------------------------------------------------ |
+| GET    | `/api/health`        | —    | liveness only                                                |
+| POST   | `/api/auth/register` | —    | 201, signs the user in; 409 if the email is taken            |
+| POST   | `/api/auth/login`    | —    | 200; 401 `Invalid email or password`                         |
+| POST   | `/api/auth/logout`   | —    | 204, always                                                  |
+| GET    | `/api/auth/me`       | user | the session user                                             |
+| POST   | `/api/quotes`        | user | 201 with `inputs`, `derived`, `offers`                       |
+| GET    | `/api/quotes`        | user | own quotes; `?search=` / `?userId=` are admin-only, else 403 |
+| GET    | `/api/quotes/:id`    | user | own quote, or any quote for an admin; else 404               |
 
 Money crosses the boundary as **integer cents** (`downPaymentCents: 100000` is
 €1,000) and APR as **basis points** (`690` is 6.9%), matching how both are
@@ -121,10 +121,12 @@ src/lib/          domain and infrastructure — no React, mostly no Next.js
   db.ts             Prisma client singleton
   logger.ts         pino, JSON to stdout
   http.ts           withRoute: request logging and error → status mapping
+  openapi.ts        the API description, served and rendered from one object
   auth/             password hashing, JWT sessions, guards
 src/app/api/      thin route handlers: parse, delegate, serialise
 src/app/          pages; server components query Prisma directly
-src/components/   Field, QuotesTable, and the two client-side forms
+src/components/   Field, QuotesTable, SiteHeader, and the interactive leaves
+                  (QuoteForm, SignOutButton, PrintButton) that carry "use client"
 ```
 
 The rule worth stating: **`src/lib/` does not know about HTTP.** Route handlers
@@ -154,6 +156,11 @@ HS256 with `AUTH_SECRET` and valid for 24 hours. The token carries `id`, `email`
   header is presentation only; the page and the API each check the role.
 - Reading someone else's quote returns **404, not 403**, with a body identical
   to a genuinely missing id, so the endpoint never confirms an id exists.
+- The listing's `search` and `userId` filters are administrator-only, and a
+  customer who passes one gets **403** rather than having it quietly dropped.
+  Silently ignoring a filter would answer "no such quotes" to a question the
+  caller was never allowed to ask, which reads as an answer rather than a
+  refusal.
 - A failed login returns one message for "no such account" and "wrong password",
   and compares against a fixed dummy hash when no user is found — otherwise the
   two differ by the full cost of bcrypt and the timing leaks what the shared
@@ -165,7 +172,7 @@ HS256 with `AUTH_SECRET` and valid for 24 hours. The token carries `id`, `email`
 npm test
 ```
 
-50 tests. Unit tests cover the pricing maths (band boundaries at exactly 400
+51 tests. Unit tests cover the pricing maths (band boundaries at exactly 400
 kWh / 6 kW / 250 kWh, a zero principal, a textbook amortisation figure checked
 against a published mortgage table) and session signing (tampering, wrong
 secret, expiry, an unknown role).
@@ -235,7 +242,7 @@ must still show what that customer was actually offered.
 most decimal fractions exactly and the error compounds over the 180 iterations
 of a 15-year amortisation. Rounding happens once, at the end, deliberately.
 
-**Hand-rolled auth rather than Auth.js.** About 120 lines that are fully
+**Hand-rolled auth rather than Auth.js.** Around 160 lines that are fully
 explainable and easy to extend. A library would be the right call the moment
 OAuth, password reset, or email verification appears.
 
