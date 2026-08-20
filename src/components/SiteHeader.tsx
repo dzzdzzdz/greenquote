@@ -10,7 +10,7 @@ export async function SiteHeader() {
   const user = await readSession();
 
   return (
-    <header className="border-b border-neutral-200">
+    <header className="border-b border-neutral-200 print:hidden">
       <nav
         aria-label="Main"
         className="mx-auto flex max-w-4xl flex-wrap items-center gap-x-6 gap-y-2 p-4"

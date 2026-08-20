@@ -256,6 +256,27 @@ The schedule is rebuilt on demand from the stored principal and rate rather than
 persisted. Both were frozen when the quote was issued, so the result is
 deterministic and there is nothing extra to keep consistent.
 
+## PDF export
+
+The results page carries a **Download as PDF** button that opens the browser's
+print dialog, where "Save as PDF" is a destination on every major platform. A
+print stylesheet decides what lands on the page: the navigation and the button
+disappear, a masthead and the quote reference appear, and the schedule expands
+out of its scroll box and flows across pages with the column headings repeated.
+Verified with Chromium — one page for a quote summary, seven with a 15-year
+schedule attached.
+
+This was a deliberate trade. A server-rendered PDF behind
+`GET /api/quotes/:id/pdf` would be the stronger answer: the output would be
+identical for every user rather than depending on their browser's print
+settings, the filename would be ours, nothing would stamp the URL in the corner,
+and — the part I actually care about — the route would sit behind
+`findVisibleQuote` like every other read, which is exactly the kind of endpoint
+where authorisation gets forgotten. It also becomes something a background job
+could email. The print stylesheet costs twenty lines and no dependency; the
+server route costs a PDF library and manual layout work. Given the core was
+already complete, I took the cheap version knowingly. See below.
+
 ## What I would do next
 
 1. **Pagination** on both listings, replacing the 100-row cap.
@@ -266,7 +287,9 @@ deterministic and there is nothing extra to keep consistent.
 5. **Rate limiting** on login and registration. Nothing currently slows down an
    attacker working through a password list.
 6. **Sliding sessions or refresh tokens**, so the TTL is not a hard logout.
-7. **Amortisation schedule** per offer, and PDF export.
+7. **Server-rendered PDF** at `GET /api/quotes/:id/pdf`, replacing the print
+   stylesheet: deterministic output, our own filename, no browser furniture, and
+   the same ownership check as every other read.
 
 ## Deployment and CI/CD
 

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PrintButton } from "@/components/PrintButton";
 import { requirePageUser } from "@/lib/auth/guard";
 import { formatEuros } from "@/lib/money";
 import {
@@ -40,10 +41,23 @@ export default async function QuotePage({
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 p-6">
-      <h1 className="text-2xl font-semibold">Your pre-qualification</h1>
-      <p className="mt-1 text-sm text-neutral-600">
-        {quote.address} · {quote.systemSizeKw} kW ·{" "}
-        {quote.monthlyConsumptionKwh} kWh per month
+      <p className="hidden text-sm font-semibold print:block">GreenQuote</p>
+
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Your pre-qualification</h1>
+          <p className="mt-1 text-sm text-neutral-600">
+            {quote.address} · {quote.systemSizeKw} kW ·{" "}
+            {quote.monthlyConsumptionKwh} kWh per month
+          </p>
+        </div>
+        <PrintButton />
+      </div>
+
+      {/* Only useful on paper, where the page has no address bar to identify it. */}
+      <p className="mt-2 hidden text-xs text-neutral-600 print:block">
+        Reference {quote.id} · issued{" "}
+        {quote.createdAt.toLocaleDateString("en-GB")}
       </p>
 
       <dl className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -108,7 +122,7 @@ export default async function QuotePage({
               <Link
                 href={`?term=${offer.termYears}`}
                 scroll={false}
-                className="mt-2 inline-block text-sm underline"
+                className="mt-2 inline-block text-sm underline print:hidden"
                 aria-current={
                   selected?.termYears === offer.termYears ? "true" : undefined
                 }
@@ -132,7 +146,7 @@ export default async function QuotePage({
             slightly because each month is rounded to whole cents.
           </p>
 
-          <div className="mt-4 max-h-96 overflow-auto rounded-lg border border-neutral-300">
+          <div className="print-expand mt-4 max-h-96 overflow-auto rounded-lg border border-neutral-300">
             <table className="w-full border-collapse text-right text-sm">
               <thead className="sticky top-0 bg-white">
                 <tr className="border-b border-neutral-300">

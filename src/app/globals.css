@@ -17,3 +17,21 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
+
+@media print {
+  /* Repeat the column headings when a long schedule spans pages, and keep a
+     row's figures together rather than splitting one across a page break. */
+  thead {
+    display: table-header-group;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+
+  /* The schedule scrolls on screen; on paper it simply continues. */
+  .print-expand {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
