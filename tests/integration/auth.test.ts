@@ -63,6 +63,38 @@ describe("the sign-in lifecycle", () => {
     });
   });
 
+  it("refuses an email that already has an account", async () => {
+    await register(post("/api/auth/register", credentials), {});
+
+    const second = await register(
+      post("/api/auth/register", { ...credentials, fullName: "Someone Else" }),
+      {},
+    );
+
+    expect(second.status).toBe(409);
+    await expect(second.json()).resolves.toMatchObject({
+      error: { code: "CONFLICT" },
+    });
+    expect(await prisma.user.count()).toBe(1);
+  });
+
+  it("treats addresses differing only in case as the same account", async () => {
+    await register(post("/api/auth/register", credentials), {});
+
+    // Without lowercasing during validation the unique index compares raw
+    // strings and this would quietly create a second account.
+    const shouted = await register(
+      post("/api/auth/register", {
+        ...credentials,
+        email: credentials.email.toUpperCase(),
+      }),
+      {},
+    );
+
+    expect(shouted.status).toBe(409);
+    expect(await prisma.user.count()).toBe(1);
+  });
+
   it("stores a hash, never the password", async () => {
     await register(post("/api/auth/register", credentials), {});
 

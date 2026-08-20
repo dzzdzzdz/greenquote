@@ -196,6 +196,25 @@ This is what the integration suite cannot show. Those tests mock `next/headers`,
 so the cookie never leaves Node; here the browser really stores it, really sends
 it back on each navigation, and really keeps it across a redirect.
 
+## Where this departs from the brief
+
+**Offer field names carry their units.** The brief asks each offer to return
+`termYears`, `apr`, `principalUsed` and `monthlyPayment`. This API returns
+`termYears`, `aprBps`, `principalCents` and `monthlyPaymentCents` — the same
+four values, renamed.
+
+The reason is that the unnamed units are the ambiguous part. `principalUsed:
+500000` gives a reader no way to know whether that is five thousand euros or
+five hundred thousand, and `apr: 6.9` versus `apr: 0.069` is the kind of
+mismatch that survives code review and shows up in someone's repayment
+schedule. Money is stored as integer cents and interest as basis points, so the
+field names say so, and the same convention holds on the way in
+(`downPaymentCents`).
+
+It is a deviation, made deliberately rather than overlooked. Matching the brief
+exactly would be a rename in `toQuoteResponse` and nothing else, since the
+serialiser is the only place the public shape is defined.
+
 ## Design decisions and trade-offs
 
 **SQLite, not Postgres.** Zero setup for a reviewer. The cost is dev/prod
