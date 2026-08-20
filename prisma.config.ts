@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig } from "prisma/config";
 
 // Prisma 7 no longer reads .env itself. Next.js loads it for the app, so this
 // covers CLI commands only. An explicit DATABASE_URL wins, which is how the
@@ -9,11 +9,15 @@ if (!process.env.DATABASE_URL && existsSync(".env")) {
   process.loadEnvFile(".env");
 }
 
+// Only migrate and seed need a connection. `prisma generate` reads the schema
+// alone, and it runs from postinstall - before a fresh clone has copied
+// .env.example. Demanding a URL here would fail `npm install` itself, so the
+// datasource is declared only when one exists and migrate reports its absence.
+const url = process.env.DATABASE_URL;
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
-  datasource: {
-    url: env("DATABASE_URL"),
-  },
+  ...(url ? { datasource: { url } } : {}),
   migrations: {
     seed: "tsx prisma/seed.ts",
   },
